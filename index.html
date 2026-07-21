@@ -216,8 +216,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhFy_qtNw6AT4I26n6X9_xnzTZ2y8OnydjGYE45nOlruoo_YQpzvv38DU7-w4ZANto/exec';
-  const API = 'https://corsproxy.io/?' + encodeURIComponent(SCRIPT_URL);
+  const API = 'https://script.google.com/macros/s/AKfycbzhFy_qtNw6AT4I26n6X9_xnzTZ2y8OnydjGYE45nOlruoo_YQpzvv38DU7-w4ZANto/exec';
 
   function formatDate(d) {
     if (!d) return '—';
@@ -247,29 +246,38 @@
     document.getElementById('inputSection').style.display = 'block';
   }
 
-  async function verify(code) {
+  function verify(code) {
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('resultValid').style.display = 'none';
     document.getElementById('resultInvalid').style.display = 'none';
-    try {
-      const url = `${API}?code=${encodeURIComponent(code)}`;
-      const res = await fetch(url);
-      const data = await res.json();
+
+    const old = document.getElementById('jsonp-script');
+    if (old) old.remove();
+
+    const timer = setTimeout(() => {
+      showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
+    }, 10000);
+
+    window.__grVerify = function(data) {
+      clearTimeout(timer);
+      document.getElementById('jsonp-script').remove();
       if (data.valid) {
         showValid(data);
       } else {
         const expired = data.message && data.message.includes('پایان');
         showInvalid(
           expired ? 'اقامت پایان یافته' : 'واچر نامعتبر',
-          expired
-            ? 'مدت اقامت این مهمان در هتل به پایان رسیده است.'
-            : 'این کد رزرو در سیستم هتل یافت نشد.'
+          expired ? 'مدت اقامت این مهمان در هتل به پایان رسیده است.' : 'این کد رزرو در سیستم هتل یافت نشد.'
         );
       }
-    } catch(e) {
-      showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
-    }
+    };
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-script';
+    script.src = API + '?code=' + encodeURIComponent(code) + '&callback=__grVerify';
+    script.onerror = () => { clearTimeout(timer); showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.'); };
+    document.head.appendChild(script);
   }
 
   function checkCode() {
