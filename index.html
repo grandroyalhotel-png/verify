@@ -291,7 +291,7 @@
       labelIn: 'Check-in',
       labelOut: 'Check-out',
       expiredTitle: 'Stay Ended',
-      expiredMsg: 'The guest's stay at the hotel has ended.',
+      expiredMsg: "The guest's stay at the hotel has ended.",
       invalidTitle: 'Invalid Voucher',
       invalidMsg: 'This reservation code was not found in the hotel system.',
       errorTitle: 'Connection Error',
@@ -389,7 +389,14 @@
     document.getElementById('resultValid').style.display = 'none';
     document.getElementById('resultInvalid').style.display = 'none';
     try {
-      const res = await fetch(`${API}/?code=${encodeURIComponent(code)}`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(`${API}/?code=${encodeURIComponent(code)}`, {
+        signal: controller.signal,
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      clearTimeout(timeout);
       const data = await res.json();
       if (data.valid) {
         showValid(data);
