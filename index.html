@@ -246,14 +246,24 @@
     document.getElementById('inputSection').style.display = 'block';
   }
 
-  async function verify(code) {
+  function verify(code) {
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('resultValid').style.display = 'none';
     document.getElementById('resultInvalid').style.display = 'none';
-    try {
-      const res = await fetch(`${API}?code=${encodeURIComponent(code)}`);
-      const data = await res.json();
+
+    // Remove old script tag if exists
+    const old = document.getElementById('jsonp-script');
+    if (old) old.remove();
+
+    // Timeout fallback
+    const timer = setTimeout(() => {
+      showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
+    }, 8000);
+
+    // JSONP callback
+    window.__verifyCallback = function(data) {
+      clearTimeout(timer);
       if (data.valid) {
         showValid(data);
       } else {
@@ -265,9 +275,16 @@
             : 'این کد رزرو در سیستم هتل یافت نشد.'
         );
       }
-    } catch(e) {
+    };
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-script';
+    script.src = `${API}?code=${encodeURIComponent(code)}&callback=__verifyCallback`;
+    script.onerror = () => {
+      clearTimeout(timer);
       showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
-    }
+    };
+    document.body.appendChild(script);
   }
 
   function checkCode() {
