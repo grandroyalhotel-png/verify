@@ -216,7 +216,7 @@
 </div>
 
 <script>
-  const API = 'https://script.google.com/macros/s/AKfycbzhFy_qtNw6AT4I26n6X9_xnzTZ2y8OnydjGYE45nOlruoo_YQpzvv38DU7-w4ZANto/exec';
+  const API = 'https://odd-mud-ca5b.hamedbakrani88.workers.dev';
 
   function formatDate(d) {
     if (!d) return '—';
@@ -246,22 +246,14 @@
     document.getElementById('inputSection').style.display = 'block';
   }
 
-  function verify(code) {
+  async function verify(code) {
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('resultValid').style.display = 'none';
     document.getElementById('resultInvalid').style.display = 'none';
-
-    const old = document.getElementById('jsonp-script');
-    if (old) old.remove();
-
-    const timer = setTimeout(() => {
-      showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
-    }, 10000);
-
-    window.__grVerify = function(data) {
-      clearTimeout(timer);
-      document.getElementById('jsonp-script').remove();
+    try {
+      const res = await fetch(`${API}/?code=${encodeURIComponent(code)}`);
+      const data = await res.json();
       if (data.valid) {
         showValid(data);
       } else {
@@ -271,13 +263,9 @@
           expired ? 'مدت اقامت این مهمان در هتل به پایان رسیده است.' : 'این کد رزرو در سیستم هتل یافت نشد.'
         );
       }
-    };
-
-    const script = document.createElement('script');
-    script.id = 'jsonp-script';
-    script.src = API + '?code=' + encodeURIComponent(code) + '&callback=__grVerify';
-    script.onerror = () => { clearTimeout(timer); showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.'); };
-    document.head.appendChild(script);
+    } catch(e) {
+      showInvalid('خطا در اتصال', 'لطفاً اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.');
+    }
   }
 
   function checkCode() {
