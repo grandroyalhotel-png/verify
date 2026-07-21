@@ -227,7 +227,7 @@
       <hr class="divider">
       <div class="info-row">
         <span class="info-value" id="roomName">—</span>
-        <span class="info-label">اتاق</span>
+        <span class="info-label">شماره پاسپورت</span>
       </div>
       <hr class="divider">
       <div class="info-row">
@@ -266,7 +266,7 @@
       validTitle: 'رزرو تایید شد',
       validSub: 'این واچر معتبر و اصل می‌باشد',
       labelName: 'نام مهمان',
-      labelRoom: 'اتاق',
+      labelRoom: 'شماره پاسپورت',
       labelIn: 'تاریخ ورود',
       labelOut: 'تاریخ خروج',
       expiredTitle: 'اقامت پایان یافته',
@@ -285,7 +285,7 @@
       validTitle: 'Reservation Confirmed',
       validSub: 'This voucher is valid and authentic',
       labelName: 'Guest Name',
-      labelRoom: 'Room',
+      labelRoom: 'Passport',
       labelIn: 'Check-in',
       labelOut: 'Check-out',
       expiredTitle: 'Stay Ended',
@@ -304,7 +304,7 @@
       validTitle: 'ჯავშანი დადასტურდა',
       validSub: 'ეს ვაუჩერი ნამდვილი და მოქმედია',
       labelName: 'სტუმრის სახელი',
-      labelRoom: 'ნომერი',
+      labelRoom: 'პასპორტი',
       labelIn: 'შემოსვლა',
       labelOut: 'გასვლა',
       expiredTitle: 'დარჩენის ვადა ამოიწურა',
@@ -354,7 +354,7 @@
     document.getElementById('loader').style.display = 'none';
     document.getElementById('resultValid').style.display = 'block';
     document.getElementById('guestName').textContent = data.name || '—';
-    document.getElementById('roomName').textContent = data.room || '—';
+    document.getElementById('roomName').textContent = data.passport || '—';
     document.getElementById('checkIn').textContent = formatDate(data.check_in);
     document.getElementById('checkOut').textContent = formatDate(data.check_out);
   }
