@@ -122,6 +122,8 @@
     .info-label { color: #8a9ab8; font-size: 0.82rem; }
     .info-value { color: #f7f5ee; font-size: 0.95rem; font-weight: 600; }
     .divider { border: none; border-top: 1px solid #2a3550; }
+    .guest-block { display: grid; gap: 10px; }
+    .guest-block + .guest-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid #2a3550; }
 
     .badge {
       margin-top: 24px;
@@ -220,24 +222,16 @@
     <h2>رزرو تایید شد</h2>
     <p class="sub">این واچر معتبر و اصل می‌باشد</p>
     <div class="info-grid">
-      <div class="info-row">
-        <span class="info-value" id="guestName">—</span>
-        <span class="info-label">نام مهمان</span>
-      </div>
-      <hr class="divider">
-      <div class="info-row">
-        <span class="info-value" id="roomName">—</span>
-        <span class="info-label">شماره پاسپورت</span>
-      </div>
+      <div id="guestRows"></div>
       <hr class="divider">
       <div class="info-row">
         <span class="info-value" id="checkIn">—</span>
-        <span class="info-label">تاریخ ورود</span>
+        <span class="info-label" id="labelIn">تاریخ ورود</span>
       </div>
       <hr class="divider">
       <div class="info-row">
         <span class="info-value" id="checkOut">—</span>
-        <span class="info-label">تاریخ خروج</span>
+        <span class="info-label" id="labelOut">تاریخ خروج</span>
       </div>
     </div>
     <div class="badge">✦ Grand Royal Hotel Batumi</div>
@@ -334,13 +328,47 @@
     document.querySelector('#resultValid .sub').textContent = t.validSub;
 
     // Labels
-    const labels = document.querySelectorAll('.info-label');
-    if (labels.length >= 4) {
-      labels[0].textContent = t.labelName;
-      labels[1].textContent = t.labelRoom;
-      labels[2].textContent = t.labelIn;
-      labels[3].textContent = t.labelOut;
+    document.getElementById('labelIn').textContent = t.labelIn;
+    document.getElementById('labelOut').textContent = t.labelOut;
+
+    // Rebuild guest rows so their labels match the new language too
+    if (lastGuests) renderGuestRows(lastGuests);
+  }
+
+  // Splits "arad, hamed, monir" + "232342523, 235425, 23523523"
+  // into [{name:'arad', passport:'232342523'}, ...], pairing by position.
+  function pairGuests(nameStr, passportStr) {
+    const names = String(nameStr || '').split(',').map(s => s.trim()).filter(Boolean);
+    const passports = String(passportStr || '').split(',').map(s => s.trim()).filter(Boolean);
+    const count = Math.max(names.length, passports.length);
+    const guests = [];
+    for (let i = 0; i < count; i++) {
+      guests.push({ name: names[i] || '—', passport: passports[i] || '—' });
     }
+    return guests.length ? guests : [{ name: '—', passport: '—' }];
+  }
+
+  let lastGuests = null;
+
+  function renderGuestRows(guests) {
+    lastGuests = guests;
+    const t = LANGS[currentLang];
+    const container = document.getElementById('guestRows');
+    container.innerHTML = '';
+    guests.forEach(g => {
+      const block = document.createElement('div');
+      block.className = 'guest-block';
+      block.innerHTML = `
+        <div class="info-row">
+          <span class="info-value">${g.name}</span>
+          <span class="info-label">${t.labelName}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-value">${g.passport}</span>
+          <span class="info-label">${t.labelRoom}</span>
+        </div>`;
+      container.appendChild(block);
+    });
   }
 
   function formatDate(d) {
@@ -353,8 +381,7 @@
   function showValid(data) {
     document.getElementById('loader').style.display = 'none';
     document.getElementById('resultValid').style.display = 'block';
-    document.getElementById('guestName').textContent = data.name || '—';
-    document.getElementById('roomName').textContent = data.passport || '—';
+    renderGuestRows(pairGuests(data.name, data.passport));
     document.getElementById('checkIn').textContent = formatDate(data.check_in);
     document.getElementById('checkOut').textContent = formatDate(data.check_out);
   }
