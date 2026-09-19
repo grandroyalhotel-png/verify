@@ -311,6 +311,7 @@
   };
 
   let currentLang = 'ka';
+  let lastInvalidType = null;
 
   function setLang(lang) {
     currentLang = lang;
@@ -333,6 +334,9 @@
 
     // Rebuild guest rows so their labels match the new language too
     if (lastGuests) renderGuestRows(lastGuests);
+
+    // Re-render the invalid/expired/error message in the newly selected language
+    if (lastInvalidType) showInvalidLang(lastInvalidType);
   }
 
   // Splits "arad, hamed, monir" + "232342523, 235425, 23523523"
@@ -394,6 +398,7 @@
   }
 
   function showInvalidLang(type) {
+    lastInvalidType = type;
     const t = LANGS[currentLang];
     if (type === 'expired') showInvalid(t.expiredTitle, t.expiredMsg);
     else if (type === 'notfound') showInvalid(t.invalidTitle, t.invalidMsg);
@@ -406,6 +411,7 @@
   }
 
   async function verify(code) {
+    lastInvalidType = null;
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('resultValid').style.display = 'none';
