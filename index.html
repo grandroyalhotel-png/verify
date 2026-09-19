@@ -410,6 +410,32 @@
     document.getElementById('inputSection').style.display = 'block';
   }
 
+  // Tries the request up to 3 times so a single slow/failed response
+  // (e.g. Apps Script cold start) does not show a false connection error.
+  async function fetchWithRetry(url, tries = 3) {
+    let lastErr;
+    for (let i = 0; i < tries; i++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(url, {
+          signal: controller.signal,
+          mode: 'cors',
+          cache: 'no-store'
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        clearTimeout(timeout);
+        lastErr = e;
+        console.warn('verify attempt ' + (i + 1) + ' failed:', e);
+        if (i < tries - 1) await new Promise(r => setTimeout(r, 800 * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   async function verify(code) {
     lastInvalidType = null;
     document.getElementById('loader').style.display = 'flex';
@@ -417,15 +443,7 @@
     document.getElementById('resultValid').style.display = 'none';
     document.getElementById('resultInvalid').style.display = 'none';
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-      const res = await fetch(`${API}/?code=${encodeURIComponent(code)}`, {
-        signal: controller.signal,
-        mode: 'cors',
-        cache: 'no-cache'
-      });
-      clearTimeout(timeout);
-      const data = await res.json();
+      const data = await fetchWithRetry(`${API}/?code=${encodeURIComponent(code)}`);
       if (data.valid) {
         showValid(data);
       } else {
@@ -433,6 +451,7 @@
         showInvalidLang(expired ? 'expired' : 'notfound');
       }
     } catch(e) {
+      console.error('verify failed:', e);
       showInvalidLang('error');
     }
   }
